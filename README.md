@@ -42,4 +42,109 @@ def draw():
     screen.draw.filled_rect(timer_box, "navy blue")
     screen.draw.filled_rect(skip_box, "dark green")
 
-    
+ for answer_box in answer_boxes:
+    screen.draw.filled_rect(answer_box, "dark orange")
+
+marquee_message = "Welcome to Quiz Master..."
+marquee_message = marquee_message + f"Q: (question_index) of (question_count)"
+
+screen.draw.textbox(marquee_message, marquee_box, color="white")
+screen.draw.textbox(
+    str(time_left). timer_box,
+    color="white", shadow=(0.5,0.5)
+    scolor="dim grey"
+)
+screen.draw.textbox(
+    "skip", skip_box,
+    color="black", angle=-90
+)
+screen.draw.textbox(
+    question[0].strip(), question_box,
+    color="white", shadow=(0.5,0.5)
+    scolor="dim grey"
+)
+index = 1
+for answer_box in answer_boxes:
+    screen.draw.textbox(question[index].strip(), answer_box, color="black")
+    index = index + 1
+
+
+def update():
+    move_marquee()
+
+
+def move_marquee():
+    marquee_box.x = marquee_box.x - 2
+    if marquee_box.right < 0:
+        marquee_box.left = WIDTH
+
+
+def read_question_file():
+    global question_count, questions
+    q_file =open(question_file_name, "r")
+    for question in q_file:
+        questions.append(question)
+        question_count = question_count + 1
+    q_file.close
+
+
+def read_next_question():
+    global question_index
+    question_index = question_index + 1
+    return questions.pop(0).split(",")
+
+
+def on_mouse_down(pos):
+    index = 1
+    for box in answer_boxes:
+        if box.collidepoint(pos):
+            if index is int(question[5]):
+                correct_answer()
+            else:
+                game_over()
+        index = index + 1
+
+    if skip_box.collidepoint(pos):
+        skip_question()
+
+
+def correct_answer():
+    global score, question, time_left, questions
+    score = score + 1
+    if questions:
+        question = read_next_question()
+        time_left = 10
+    else:
+        game_over()
+
+
+def game_over():
+    global question, time_left, is_game_over
+    message = f"Game over!\nYou got {score} question correct!"
+    question = [message, "-","-","-","-",5]
+    time_left = 0
+    is_game_over = True
+
+
+def skip_questions():
+    global question, time_left
+    if questions and not is_game_over:
+        question = read_next_question()
+        time_left = 10
+    else:
+        game_over()
+
+
+def update_time_left():
+    global time_left
+    if time_left:
+        time_left = time_left + 1
+    else:
+        game_over()
+
+
+read_question_file()
+question = read_next_question()
+clock.schedule_interval(update_time_left, 1)
+
+pgzrun.go()
